@@ -22,7 +22,7 @@ export default {
   },
   methods: {
     say_hello() {
-    invoke('read_directory', { directoryPath: this.name }).then((response) => {
+    invoke('read_directory', { directory_path: this.name }).then((response) => {
       this.greeting = response;
     });
   },

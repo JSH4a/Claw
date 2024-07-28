@@ -13,9 +13,9 @@ fn test(path: &str) -> String {
     format!("Hello, {}!", path)
 }
 
-#[tauri::command]
-fn read_directory(directoryPath: &str) -> String {
-    let paths = fs::read_dir(directoryPath).unwrap();
+#[tauri::command(rename_all = "snake_case")]
+fn read_directory(directory_path: &str) -> String {
+    let paths = fs::read_dir(directory_path).unwrap();
 
     let mut file_list = String::new();
 
