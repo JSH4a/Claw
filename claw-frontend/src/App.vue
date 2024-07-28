@@ -22,7 +22,7 @@ export default {
   },
   methods: {
     say_hello() {
-    invoke('greet', { name: this.name }).then((response) => {
+    invoke('get_files_in_directory', { name: this.name }).then((response) => {
       this.greeting = response;
     });
   },
