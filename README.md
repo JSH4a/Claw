@@ -1,6 +1,14 @@
 # Setup
 
-To create the vue app
+At the project root start the nix shell 
 
-    npm install @vue/cli
+    nix-shell shell.nix
 
+Then do
+
+    cd claw-frontend
+    npm install
+
+To run the app, do
+    
+    cargo tauri dev 

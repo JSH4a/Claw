@@ -1,7 +1,9 @@
 <!-- App.vue -->
 <template>
+<link rel="stylesheet" href="@/assets/static/stylesheets/global.css">
+
   <input type="text" v-model="name">
-  <button @click="say_hello">say hello</button>
+  <button @click="say_hello">say hi</button>
   <p>{{ greeting }}</p>
 </template>
 
@@ -33,6 +35,11 @@ export default {
 </script>
 
 <style>
+* {
+  background: black;
+  color: white;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
