@@ -1,4 +1,4 @@
-use std::{fs, io};
+use std::fs;
 fn file_stuff() {
     let paths = fs::read_dir("/").unwrap();
 
@@ -8,21 +8,23 @@ fn file_stuff() {
 }
 
 #[tauri::command]
-fn get_files_in_directory(path: &str) -> io::Result<Vec<String>> {
-    // Get a list of all entries in the folder
-    let entries = fs::read_dir(path)?;
+fn read_directory(directory_path: &str) -> String {
+    let paths = fs::read_dir(directory_path).unwrap();
 
-    // Extract the filenames from the directory entries and store them in a vector
-    let file_names: Vec<String> = entries
-        .filter_map(|entry| {
-            let path = entry.ok()?.path();
-            if path.is_file() {
-                path.file_name()?.to_str().map(|s| s.to_owned())
-            } else {
-                None
-            }
-        })
-        .collect();
+    for path in paths {
+      // do something
+        let path = path.unwrap();
 
-    Ok(file_names)
+        if let Some(file_name) = path.file_name().to_str() {
+            file_list.push_str(file_name);
+            file_list.push('\n'); // Add a newline after each file name.
+        }
+    }
+
+    // return here
+    file_list;
+}
+
+fn main() {
+    file_stuff();
 }

@@ -9,29 +9,34 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn get_files_in_directory(path: &str) -> io::Result<Vec<String>> {
-  // Get a list of all entries in the folder
-  let entries = fs::read_dir(path)?;
-
-  // Extract the filenames from the directory entries and store them in a vector
-  let file_names: Vec<String> = entries
-      .filter_map(|entry| {
-        let path = entry.ok()?.path();
-        if path.is_file() {
-          path.file_name()?.to_str().map(|s| s.to_owned())
-        } else {
-          None
-        }
-      })
-      .collect();
-
-  Ok(file_names)
+fn test(path: &str) -> String {
+    format!("Hello, {}!", path)
 }
 
+#[tauri::command]
+fn read_directory(directoryPath: &str) -> String {
+    let paths = fs::read_dir(directoryPath).unwrap();
+
+    let mut file_list = String::new();
+
+    for path in paths {
+        // do something
+        let path = path.unwrap();
+
+        if let Some(file_name) = path.file_name().to_str() {
+            file_list.push_str(file_name);
+            file_list.push('\n'); // Add a newline after each file name.
+        }
+    }
+
+    // return here
+    return format!("{}", file_list);
+}
 
 fn main() {
   tauri::Builder::default()
       .invoke_handler(tauri::generate_handler![greet])
+      .invoke_handler(tauri::generate_handler![read_directory])
       .run(tauri::generate_context!())
       .expect("error while running tauri application");
 }
