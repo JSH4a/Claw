@@ -1,14 +1,14 @@
 <!-- App.vue -->
 <template>
 <link rel="stylesheet" href="@/assets/static/stylesheets/global.css">
-
-  <input type="text" v-model="name">
-  <button @click="say_hello">say hi</button>
-  <p>{{ greeting }}</p>
+  <top-bar/>
+  <left-bar/>
 </template>
 
 <script>
-import { invoke } from '@tauri-apps/api'
+import { invoke } from '@tauri-apps/api';
+import TopBar from './components/TopBar';
+import LeftBar from './components/LeftBar';
 
 export default {
   data() {
@@ -19,6 +19,8 @@ export default {
   },
   name: 'App',
   components: {
+    'top-bar': TopBar,
+    'left-bar': LeftBar,
   },
   methods: {
     say_hello() {
