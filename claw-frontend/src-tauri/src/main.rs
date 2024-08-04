@@ -1,41 +1,76 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{fs, io};
+use std::time::{SystemTime};
+use serde::Serialize;
+use std::{fs};
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-  format!("Hello, {}!", name)
-}
-
-#[tauri::command]
-fn test(path: &str) -> String {
-    format!("Hello, {}!", path)
+#[derive(Serialize)]
+struct FileInfo {
+    name: String,
+    path: String,
+    file_type: String,
+    last_modified: String,
 }
 
 #[tauri::command(rename_all = "snake_case")]
 fn read_directory(directory_path: &str) -> String {
-    let paths = fs::read_dir(directory_path).unwrap();
+    match fs::read_dir(directory_path) {
+        Ok(paths) => {
+            let mut file_list = Vec::new();
 
-    let mut file_list = String::new();
+            for entry in paths {
+                let entry = entry.unwrap();
+                let metadata = entry.metadata().unwrap();
 
-    for path in paths {
-        // do something
-        let path = path.unwrap();
+                let file_path = entry.path()
+                    .canonicalize()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string();
 
-        if let Some(file_name) = path.file_name().to_str() {
-            file_list.push_str(file_name);
-            file_list.push('\n'); // Add a newline after each file name.
+                // Get file name
+                let file_name = entry.file_name().into_string().unwrap();
+
+                // Determine file type
+                let file_type = if metadata.is_file() {
+                    "File"
+                } else if metadata.is_dir() {
+                    "Directory"
+                } else {
+                    "Other"
+                }.to_string();
+
+                // Get last modified time
+                let modified_time = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
+                let datetime: chrono::DateTime<chrono::Utc> = modified_time.into();
+                let last_modified = datetime.format("%d/%m/%Y").to_string();
+
+                // Create file info struct
+                let file_info = FileInfo {
+                    name: file_name,
+                    path: file_path,
+                    file_type,
+                    last_modified,
+                };
+
+                // Add the file info to the list
+                file_list.push(file_info);
+            }
+
+            // Serialize the list of file info to a JSON string
+            serde_json::to_string(&file_list).unwrap()
+        }
+        Err(_) => {
+            // Return a default string if the directory can't be read
+            "{}".to_string()
         }
     }
-
-    // return here
-    return format!("{}", file_list);
 }
 
 fn main() {
   tauri::Builder::default()
-      .invoke_handler(tauri::generate_handler![greet])
       .invoke_handler(tauri::generate_handler![read_directory])
       .run(tauri::generate_context!())
       .expect("error while running tauri application");
