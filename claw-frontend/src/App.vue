@@ -1,45 +1,40 @@
 <!-- App.vue -->
 <template>
 <link rel="stylesheet" href="@/assets/static/stylesheets/global.css">
-  <top-bar/>
-  <left-bar/>
+  <div id="app">
+    <top-bar @update-results="updateResults"/>
+    <results-container :results="this.results"/>
+  </div>
 </template>
 
 <script>
-import { invoke } from '@tauri-apps/api';
-import TopBar from './components/TopBar';
-import LeftBar from './components/LeftBar';
+import TopBar from '@/components/top-bar/TopBar.vue';
+import ResultsContainer from "@/components/results/ResultsContainer.vue";
 
 export default {
   data() {
     return {
-      greeting: '',
-      name: ''
+      results: JSON,
     }
   },
   name: 'App',
   components: {
+    ResultsContainer,
     'top-bar': TopBar,
-    'left-bar': LeftBar,
   },
   methods: {
-    say_hello() {
-    invoke('read_directory', { directory_path: this.name }).then((response) => {
-      this.greeting = response;
-    });
+    updateResults(newResults) {
+      this.results = newResults;
+    }
   },
-
-  }
 }
-
-
-
 </script>
 
 <style>
 * {
   background: black;
   color: white;
+  font-size: 1.1rem;
 }
 
 #app {
@@ -48,6 +43,9 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 35px;
+
+  display: flex;
+  flex-direction: column;
 }
 </style>
