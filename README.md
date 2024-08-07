@@ -1,16 +1,15 @@
-# Setup
-![alt text](http://url/to/https://github.com/JSH4a/Claw/blob/main/claw-frontend/src/assets/logo.png)
+# Claw
+![alt text](src/assets/logo.png "Title")
 
-
-At the project root start the nix shell 
+## Running the app
+For nix users, launch the nix shell at the project root.
 
     nix-shell shell.nix
 
-Then do
+To build the frontend run
 
-    cd claw-frontend
     npm install
 
 To run the app, do
     
-    cargo tauri dev 
+    cargo tauri dev
