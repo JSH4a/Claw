@@ -13,8 +13,8 @@ fn get_search_parts(search_string: &str) -> Vec<&str> {
         .collect::<Vec<&str>>()
 }
 
-fn matches_regex(string: &str, regex: &str) -> bool {
-    match Regex::new(regex) {
+fn matches_regex(string: &str, reg: &str) -> bool {
+    match Regex::new(reg) {
         Ok(regex) => {
             regex.is_match(string)
         }
@@ -61,7 +61,6 @@ pub fn resolve_search(search_string: &str) {
     let mut first_part: bool = true;
 
     for part in search_parts {
-        println!("{}", part);
         if first_part {
             children = read_directory("/");
             first_part = false;
@@ -70,7 +69,6 @@ pub fn resolve_search(search_string: &str) {
         }
 
         paths = children.iter().filter(|child| { matches_regex(child, part) }).cloned().collect();
+        println!("{:?} {:?}", part, paths);
     }
-
-    println!("{:?}", paths);
 }
