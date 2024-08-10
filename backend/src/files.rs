@@ -37,7 +37,7 @@ fn read_directory(directory_path: &str) -> Vec<String> {
                     .unwrap()
                     .to_str()
                     .unwrap()
-                    .sto_string();
+                    .to_string();
 
                 // Add the file info to the list
                 file_list.push(file_path);
@@ -56,12 +56,20 @@ fn read_directory(directory_path: &str) -> Vec<String> {
 pub fn resolve_search(search_string: &str) {
     let search_parts = get_search_parts(search_string);
 
-    let mut paths = read_directory("/");
+    let mut paths: Vec<String> = read_directory("/");
+    let mut children: Vec<String>;
+    let mut first_part: bool = true;
 
     for part in search_parts {
-        let children: Vec<String> = paths.iter().map(|x| { read_directory(x) }).flat_map(|x1| {x1}).collect();
+        println!("{}", part);
+        if first_part {
+            children = read_directory("/");
+            first_part = false;
+        } else {
+            children = paths.iter().map(|x| { read_directory(x) }).flat_map(|x1| {x1}).collect();
+        }
 
-        paths = children.iter().filter(|child| { matches_regex(child, part) }).collect();
+        paths = children.iter().filter(|child| { matches_regex(child, part) }).cloned().collect();
     }
 
     println!("{:?}", paths);
