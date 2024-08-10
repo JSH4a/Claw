@@ -1,5 +1,5 @@
 # Claw
-![alt text](src/assets/logo.png "Title")
+![alt text](frontend/assets/logo.png "Title")
 
 ## Running the app
 For nix users, launch the nix shell at the project root.
