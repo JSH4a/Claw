@@ -1,34 +1,68 @@
 use regex::Regex;
-use std::env;
+use std::{env, path};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::path::MAIN_SEPARATOR;
+use std::time::SystemTime;
+use serde_json::to_vec;
+use crate::FileInfo;
 
-/// Splits the input string into sections of regex and non-regex parts.
-fn split_into_regex_and_nonregex(input: &str) -> Vec<String> {
-    // This regex identifies sections that could be regex or contain special characters.
-    let re = Regex::new(r"\{.*?\}|\[.*?\]|\(.*?\)|/.*[^\w/].*").unwrap();
-
-    let mut sections = Vec::new();
-    let mut last_end = 0;
-
-    for mat in re.find_iter(input) {
-        if mat.start() > last_end {
-            // Push the non-regex section before the regex match.
-            sections.push(input[last_end..mat.start()].to_string());
-        }
-        // Push the regex section.
-        sections.push(mat.as_str().to_string());
-        last_end = mat.end();
-    }
-
-    if last_end < input.len() {
-        // Push any remaining non-regex section after the last match.
-        sections.push(input[last_end..].to_string());
-    }
-
-    sections
+fn get_search_parts(search_string: &str) -> Vec<&str> {
+    search_string.split(MAIN_SEPARATOR)
+        .filter(|x| {!x.is_empty()})
+        .collect::<Vec<&str>>()
 }
 
-fn main() {
-    println!("{:?}", split_into_regex_and_nonregex("/directory1/{*.txt}"));
+fn matches_regex(string: &str, regex: &str) -> bool {
+    match Regex::new(regex) {
+        Ok(regex) => {
+            regex.is_match(string)
+        }
+        Err(_) => {
+            false
+        }
+    }
+}
+
+fn read_directory(directory_path: &str) -> Vec<String> {
+    let mut file_list = Vec::new();
+    match fs::read_dir(directory_path) {
+        Ok(paths) => {
+
+            for entry in paths {
+                let entry = entry.unwrap();
+
+                let file_path = entry.path()
+                    .canonicalize()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .sto_string();
+
+                // Add the file info to the list
+                file_list.push(file_path);
+            }
+
+            // Serialize the list of file info to a JSON string
+            file_list
+        }
+        Err(_) => {
+            // Return a default string if the directory can't be read
+            file_list
+        }
+    }
+}
+
+pub fn resolve_search(search_string: &str) {
+    let search_parts = get_search_parts(search_string);
+
+    let mut paths = read_directory("/");
+
+    for part in search_parts {
+        let children: Vec<String> = paths.iter().map(|x| { read_directory(x) }).flat_map(|x1| {x1}).collect();
+
+        paths = children.iter().filter(|child| { matches_regex(child, part) }).collect();
+    }
+
+    println!("{:?}", paths);
 }
