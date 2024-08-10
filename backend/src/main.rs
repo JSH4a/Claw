@@ -17,6 +17,8 @@ struct FileInfo {
 
 #[tauri::command(rename_all = "snake_case")]
 fn read_directory(directory_path: &str) -> String {
+    files::resolve_search(&directory_path);
+
     match fs::read_dir(directory_path) {
         Ok(paths) => {
             let mut file_list = Vec::new();
