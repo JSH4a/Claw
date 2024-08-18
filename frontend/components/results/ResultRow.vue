@@ -17,7 +17,7 @@
   </tr>
 </template>
 <script>
-
+import { invoke } from '@tauri-apps/api';
 export default {
   props: {
     path: String,
@@ -29,6 +29,10 @@ export default {
     updatePath() {
       if (this.type === "Directory") {
         this.pathEmitter.emit("path-update", this.path);
+      } else if (this.type === "File") {
+        invoke("open_file", { file_path: this.path }).then((response) => {
+          console.log(response);
+        });
       }
     },
   }

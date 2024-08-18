@@ -3,9 +3,9 @@
 
 mod files;
 
-use std::time::{SystemTime};
+use std::time::SystemTime;
 use serde::Serialize;
-use std::{fs};
+use std::fs;
 use crate::files::resolve_search;
 
 #[derive(Serialize)]
@@ -27,15 +27,17 @@ fn read_directory(directory_path: &str) -> String {
                 let entry = entry.unwrap();
                 let metadata = entry.metadata().unwrap();
 
-                let file_path = entry.path()
-                    .canonicalize()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_string();
 
                 // Get file name
-                let file_name = entry.file_name().into_string().unwrap();
+                let mut file_name = entry.file_name().into_string().unwrap_or("Err getting dir name".to_string());
+
+                let file_path = match entry.path().canonicalize() {
+                    Ok(p) => { p.to_str().unwrap().to_string() }
+                    Err(_) => {
+                        file_name += " - broken symlinks";
+                        directory_path.to_string()
+                    }
+                };
 
                 // Determine file type
                 let file_type = if metadata.is_file() {
@@ -73,9 +75,28 @@ fn read_directory(directory_path: &str) -> String {
     }
 }
 
+#[tauri::command(rename_all = "snake_case")]
+fn open_file(file_path: &str) -> String {
+    match fs::canonicalize(file_path) {
+        Ok(_) => {
+        }
+        Err(e) => {
+            return e.to_string();
+        }
+    }
+    match open::that(file_path) {
+        Ok(_) => {
+            "".to_string()
+        }
+        Err(e) => {
+            e.to_string()
+        }
+    }
+}
+
 fn main() {
   tauri::Builder::default()
-      .invoke_handler(tauri::generate_handler![read_directory])
+      .invoke_handler(tauri::generate_handler![read_directory, open_file])
       .run(tauri::generate_context!())
       .expect("error while running tauri application");
 }
