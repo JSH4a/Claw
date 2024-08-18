@@ -1,11 +1,9 @@
+use crate::FileInfo;
 use regex::Regex;
-use std::{env, path};
+use serde_json::to_vec;
 use std::fs;
-use std::path::{Path, PathBuf};
 use std::path::MAIN_SEPARATOR;
 use std::time::SystemTime;
-use serde_json::to_vec;
-use crate::FileInfo;
 
 fn get_search_parts(search_string: &str) -> Vec<&str> {
     search_string.split(MAIN_SEPARATOR)
@@ -24,51 +22,83 @@ fn matches_regex(string: &str, reg: &str) -> bool {
     }
 }
 
-fn read_directory(directory_path: &str) -> Vec<String> {
+fn read_directory(directory_path: &str) -> Vec<FileInfo> {
     let mut file_list = Vec::new();
-    match fs::read_dir(directory_path) {
-        Ok(paths) => {
+    let paths = fs::read_dir(directory_path).unwrap();
 
-            for entry in paths {
-                let entry = entry.unwrap();
+    for entry in paths {
+        let entry = entry.unwrap();
+        let metadata = entry.metadata().unwrap();
 
-                let file_path = entry.path()
-                    .canonicalize()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_string();
+        let file_path = entry.path()
+            .to_str()
+            .unwrap()
+            .to_string();
 
-                // Add the file info to the list
-                file_list.push(file_path);
-            }
+        // Get file name
+        let file_name = entry.file_name().into_string().unwrap();
 
-            // Serialize the list of file info to a JSON string
-            file_list
-        }
-        Err(_) => {
-            // Return a default string if the directory can't be read
-            file_list
-        }
+        // Determine file type
+        let file_type = if metadata.is_file() {
+            "File"
+        } else if metadata.is_dir() {
+            "Directory"
+        } else {
+            "Other"
+        }.to_string();
+
+        // Get last modified time
+        let modified_time = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
+        let datetime: chrono::DateTime<chrono::Utc> = modified_time.into();
+        let last_modified = datetime.format("%d/%m/%Y").to_string();
+
+        // Create file info struct
+        let file_info = FileInfo {
+            name: file_name,
+            path: file_path,
+            file_type,
+            last_modified,
+        };
+
+        // Add the file info to the list
+        file_list.push(file_info);
     }
+
+    file_list
 }
 
-pub fn resolve_search(search_string: &str) {
+pub fn resolve_search(search_string: &str) -> String {
     let search_parts = get_search_parts(search_string);
 
-    let mut paths: Vec<String> = read_directory("/");
-    let mut children: Vec<String>;
-    let mut first_part: bool = true;
+    let mut results = read_directory(&("/".to_owned()));
 
-    for part in search_parts {
-        if first_part {
-            children = read_directory("/");
-            first_part = false;
-        } else {
-            children = paths.iter().map(|x| { read_directory(x) }).flat_map(|x1| {x1}).collect();
+    results = results.into_iter()
+        .filter(|result| matches_regex(&result.name, search_parts[0]))
+        .collect();
+
+    if search_parts.len() == 1 {
+        if results.len() == 1 && results[0].path == search_string{
+            results = results.into_iter()
+                .flat_map(|result| read_directory(&result.path))
+                .collect();
         }
-
-        paths = children.iter().filter(|child| { matches_regex(child, part) }).cloned().collect();
-        println!("{:?} {:?}", part, paths);
+        return serde_json::to_string(&results).unwrap();
     }
+
+    for part in &search_parts[1..] {
+        results = results.into_iter()
+            .flat_map(|result| read_directory(&result.path))
+            .filter(|result| matches_regex(&result.name, part))
+            .collect();
+    }
+
+    // if single directory, open it and return the results
+    if (results.len() == 1 && search_string == results[0].path) {
+        results = results.into_iter()
+            .flat_map(|result| read_directory(&result.path))
+            .collect();
+    }
+
+    // Serialize the list of file info to a JSON string
+    serde_json::to_string(&results).unwrap()
 }
