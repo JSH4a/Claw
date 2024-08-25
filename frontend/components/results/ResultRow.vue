@@ -1,5 +1,5 @@
 <template>
-  <tr class="result-row" @dblclick.prevent="resultEvent">
+  <tr class="result-row" @dblclick.prevent="doResultEvent">
     <td>
       <div class="result-icon">
         <slot/>
@@ -18,6 +18,7 @@
 </template>
 <script>
 import { invoke } from '@tauri-apps/api';
+import FileType from './enum/FileType.js'
 export default {
   props: {
     path: String,
@@ -26,10 +27,11 @@ export default {
     type: String,
   },
   methods: {
-    resultEvent() {
-      if (this.type === "Directory") {
+    doResultEvent() {
+      console.log(FileType.Directory);
+      if (this.type === FileType.Directory) {
         this.pathEmitter.emit("path-update", this.path);
-      } else if (this.type === "File") {
+      } else if (this.type === FileType.File) {
         invoke("open_file", { file_path: this.path }).then((response) => {
           console.log(response);
         });
