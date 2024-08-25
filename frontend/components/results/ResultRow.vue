@@ -1,5 +1,5 @@
 <template>
-  <tr class="result-row" @dblclick.prevent="updatePath">
+  <tr class="result-row" @dblclick.prevent="resultEvent">
     <td>
       <div class="result-icon">
         <slot/>
@@ -26,7 +26,7 @@ export default {
     type: String,
   },
   methods: {
-    updatePath() {
+    resultEvent() {
       if (this.type === "Directory") {
         this.pathEmitter.emit("path-update", this.path);
       } else if (this.type === "File") {
