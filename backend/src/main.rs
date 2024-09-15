@@ -20,7 +20,7 @@ struct FileInfo {
 #[tauri::command(rename_all = "snake_case")]
 fn search_filesystem(path: &str) -> String {
     // If we 'search' for a directory and end with a '/' we should try to open it instead
-    if path.ends_with('/') {
+    if path.ends_with(std::path::MAIN_SEPARATOR_STR) {
         match fs::canonicalize(path) {
             // If the path exists and is a directory we open it, otherwise we search as normal
             Ok(out) => {
