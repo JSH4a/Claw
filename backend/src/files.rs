@@ -1,6 +1,5 @@
 use crate::FileInfo;
 use regex::Regex;
-use serde_json::to_vec;
 use std::fs;
 use std::path::MAIN_SEPARATOR;
 use std::time::SystemTime;
