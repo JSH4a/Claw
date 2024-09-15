@@ -4,9 +4,9 @@
          type="text"
          v-model="path"
          placeholder="Enter directory or search..."
-         @keydown.enter.prevent="this.readDirectory">
+         @keydown.enter.prevent="this.searchFilesystem">
 
-  <claw-button class="claw-button" @click.prevent="this.readDirectory"/>
+  <claw-button class="claw-button" @click.prevent="this.searchFilesystem"/>
 </div>
 </template>
 
@@ -23,16 +23,24 @@ export default {
     }
   },
   mounted() {
-    this.pathEmitter.on('path-update', (newPath) => {
-      console.log(newPath);
+    this.pathEmitter.on('path-search', (newPath) => {
       this.path = newPath;
-      this.readDirectory();
+      this.searchFilesystem();
+    });
+    this.pathEmitter.on('path-open', (newPath) => {
+      this.path = newPath;
+      this.openDirectory();
     });
   },
   methods: {
-    readDirectory() {
-      invoke('read_directory', { directory_path: this.path }).then((response) => {
-        this.$emit("update-results", JSON.parse(response.toString()));
+    searchFilesystem() {
+      invoke('search_filesystem', { path: this.path }).then((response) => {
+        this.$emit('update-results', JSON.parse(response.toString()));
+      });
+    },
+    openDirectory() {
+      invoke('open_directory', { directory_path: this.path }).then((response) => {
+        this.$emit('update-results', JSON.parse(response.toString()));
       });
     },
   }

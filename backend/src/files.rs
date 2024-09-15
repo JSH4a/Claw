@@ -22,7 +22,7 @@ fn matches_regex(string: &str, reg: &str) -> bool {
     }
 }
 
-fn read_directory(directory_path: &str) -> Vec<FileInfo> {
+pub fn read_directory(directory_path: &str) -> Vec<FileInfo> {
     let mut file_list = Vec::new();
     let paths = fs::read_dir(directory_path).unwrap();
 

@@ -3,10 +3,8 @@
 
 mod files;
 
-use std::time::{SystemTime};
 use serde::Serialize;
-use std::{fs};
-use crate::files::resolve_search;
+use crate::files::{resolve_search,read_directory};
 
 #[derive(Serialize)]
 // #[derive(Iterator)]
@@ -19,13 +17,18 @@ struct FileInfo {
 }
 
 #[tauri::command(rename_all = "snake_case")]
-fn read_directory(directory_path: &str) -> String {
-    resolve_search(directory_path)
+fn search_filesystem(path: &str) -> String {
+    resolve_search(path)
+}
+
+#[tauri::command(rename_all = "snake_case")]
+fn open_directory(directory_path: &str) -> String {
+    serde_json::to_string(&read_directory(directory_path)).unwrap()
 }
 
 fn main() {
   tauri::Builder::default()
-      .invoke_handler(tauri::generate_handler![read_directory])
+      .invoke_handler(tauri::generate_handler![search_filesystem,open_directory])
       .run(tauri::generate_context!())
       .expect("error while running tauri application");
 }
