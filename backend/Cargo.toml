@@ -21,6 +21,7 @@ tauri = { version = "1.7.0", features = [] }
 chrono = {version = "0.4", features = ["serde"] }
 regex = "1.10.6"
 sys = "0.0.1"
+open = "3.2.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

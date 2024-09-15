@@ -3,16 +3,25 @@
 
 mod files;
 
-use std::time::{SystemTime};
+use std::time::SystemTime;
 use serde::Serialize;
-use std::{fs};
+use std::fs;
 use crate::files::resolve_search;
+
+#[derive(Serialize)]
+enum FileType {
+    Directory,
+    File,
+    Link,
+    BrokenLink,
+    Other,
+}
 
 #[derive(Serialize)]
 struct FileInfo {
     name: String,
     path: String,
-    file_type: String,
+    file_type: FileType,
     last_modified: String,
 }
 
@@ -26,25 +35,34 @@ fn read_directory(directory_path: &str) -> String {
             for entry in paths {
                 let entry = entry.unwrap();
                 let metadata = entry.metadata().unwrap();
+                let f_type = metadata.file_type();
 
-                let file_path = entry.path()
-                    .canonicalize()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_string();
 
-                // Get file name
-                let file_name = entry.file_name().into_string().unwrap();
+                // Get file name, if we fail to turn file name into string (contains non unicode
+                // data) then skip that file
+                let file_name = match entry.file_name().into_string() {
+                    Ok(s) => { s }
+                    Err(_) => { continue; }
+                };
 
                 // Determine file type
-                let file_type = if metadata.is_file() {
-                    "File"
-                } else if metadata.is_dir() {
-                    "Directory"
+                let mut file_type = if f_type.is_file() {
+                    FileType::File
+                } else if f_type.is_dir() {
+                    FileType::Directory
+                } else if f_type.is_symlink() {
+                    FileType::Link
                 } else {
-                    "Other"
-                }.to_string();
+                    FileType::Other
+                };
+
+                let file_path = match entry.path().canonicalize() {
+                    Ok(p) => { p.to_str().unwrap().to_string() }
+                    Err(_) => {
+                        file_type = FileType::BrokenLink;
+                        directory_path.to_string()
+                    }
+                };
 
                 // Get last modified time
                 let modified_time = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
@@ -73,9 +91,21 @@ fn read_directory(directory_path: &str) -> String {
     }
 }
 
+#[tauri::command(rename_all = "snake_case")]
+fn open_file(file_path: &str) -> String {
+    match open::that(file_path) {
+        Ok(_) => {
+            "".to_string()
+        }
+        Err(e) => {
+            e.to_string()
+        }
+    }
+}
+
 fn main() {
   tauri::Builder::default()
-      .invoke_handler(tauri::generate_handler![read_directory])
+      .invoke_handler(tauri::generate_handler![read_directory, open_file])
       .run(tauri::generate_context!())
       .expect("error while running tauri application");
 }
