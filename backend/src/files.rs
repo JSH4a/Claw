@@ -71,20 +71,16 @@ pub fn resolve_search(search_string: &str) -> String {
     let search_parts = get_search_parts(search_string);
 
     let mut results = read_directory(&("/".to_owned()));
+    if search_parts.len() == 0 {
+        return serde_json::to_string(&results).unwrap()
+    }
 
+    // Do the first match for the root read_directory
     results = results.into_iter()
         .filter(|result| matches_regex(&result.name, search_parts[0]))
         .collect();
 
-    if search_parts.len() == 1 {
-        if results.len() == 1 && results[0].path == search_string{
-            results = results.into_iter()
-                .flat_map(|result| read_directory(&result.path))
-                .collect();
-        }
-        return serde_json::to_string(&results).unwrap();
-    }
-
+    // Do the rest of the searching
     for part in &search_parts[1..] {
         results = results.into_iter()
             .flat_map(|result| read_directory(&result.path))
@@ -93,10 +89,8 @@ pub fn resolve_search(search_string: &str) -> String {
     }
 
     // if single directory, open it and return the results
-    if (results.len() == 1 && search_string == results[0].path) {
-        results = results.into_iter()
-            .flat_map(|result| read_directory(&result.path))
-            .collect();
+    if results.len() == 1 && search_string == results[0].path {
+        results = read_directory(&results[0].path);
     }
 
     // Serialize the list of file info to a JSON string
