@@ -22,11 +22,24 @@ import ResultRow from "@/components/results/ResultRow.vue";
 import ResultHeaderRow from "@/components/results/ResultHeaderRow.vue";
 import DirectoryIcon from "@/components/results/icons/DirectoryIcon.vue";
 import GenericFIleIcon from "@/components/results/icons/GenericFileIcon.vue";
+import {ResultSortOption, ResultSortType} from "@/components/results/ResultSortType";
 
 export default defineComponent({
   components: {GenericFIleIcon, DirectoryIcon, ResultHeaderRow, ResultRow },
   props: {
     results: JSON,
+  },
+  data() {
+    return {
+      sortOption: ResultSortOption.TYPE,
+      sortType: ResultSortType.ASC,
+    }
+  },
+  mounted() {
+    this.resultSortTypeEmitter.on('result-sort-type-update', (newType) => {
+      this.sortType = newType.sortType;
+      this.sortOption = newType.sortOption;
+    });
   },
   computed: {
     sortedResults() {
@@ -34,14 +47,43 @@ export default defineComponent({
         return []; // Return an empty array if results is not an array
       }
 
-      return this.results.slice().sort((a, b) => {
-        const typeComparison = a.file_type.localeCompare(b.file_type);
-        if (typeComparison !== 0) {
-          return typeComparison;
-        }
-        return a.name.localeCompare(b.name);
-      });
-    }
+      let sortedResults;
+      switch (this.sortOption) {
+        case ResultSortOption.NAME:
+          sortedResults = this.results.slice().sort((a, b) => this.sortByName(a, b));
+          break;
+        case ResultSortOption.DATE:
+          sortedResults = this.results.slice().sort((a, b) => this.sortByDate(a, b));
+          break;
+        case ResultSortOption.TYPE:
+          sortedResults = this.results.slice().sort((a, b) => this.sortByType(a, b));
+          break;
+      }
+
+      if (this.sortType === ResultSortType.DSC) {
+        return sortedResults.reverse();
+      }
+      return sortedResults;
+    },
+  },
+  methods: {
+    sortByName(a, b) {
+      const nameComparison = a.name.localeCompare(b.file_type);
+      if (nameComparison !== 0) {
+        return nameComparison;
+      }
+      return a.name.localeCompare(b.name);
+    },
+    sortByDate(a, b) {
+      return a.last_modified > b.last_modified? 1 : -1;
+    },
+    sortByType(a, b) {
+      const typeComparison = a.file_type.localeCompare(b.file_type);
+      if (typeComparison !== 0) {
+        return typeComparison;
+      }
+      return a.name.localeCompare(b.name);
+    },
   }
 });
 </script>

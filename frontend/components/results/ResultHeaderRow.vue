@@ -2,20 +2,59 @@
   <tr class="header-row">
     <th class="header-icon">
     </th>
-    <th class="header-name">
+    <th :class="`header-name ` + sortClass(ResultSortOption.NAME)" @click="updateSortType(ResultSortOption.NAME)">
       Name
     </th>
-    <th class="header-date">
+    <th :class="`header-date ` + sortClass(ResultSortOption.DATE)" @click="updateSortType(ResultSortOption.DATE)">
       Last modified
     </th>
-    <th class="header-type">
+    <th :class="`header-type ` + sortClass(ResultSortOption.TYPE) " @click="updateSortType(ResultSortOption.TYPE)">
       Type
     </th>
   </tr>
 </template>
 <script>
 
+import { ResultSortOption, ResultSortType } from "@/components/results/ResultSortType";
+
 export default {
+  computed: {
+    ResultSortOption() {
+      return ResultSortOption
+    },
+  },
+  data() {
+    return {
+      sortOption: ResultSortOption.TYPE,
+      sortType: ResultSortType.ASC
+    }
+  },
+  methods: {
+    sortClass(option) {
+      if (option !== this.sortOption) {
+        return;
+      }
+      return this.sortType;
+    },
+    updateSortType(option) {
+      if (option === this.sortOption) {
+        this.toggleSortType();
+      } else {
+        this.sortType = ResultSortType.DSC;
+      }
+      this.sortOption = option;
+
+      this.resultSortTypeEmitter.emit("result-sort-type-update",
+          {sortOption: this.sortOption, sortType: this.sortType});
+    },
+    toggleSortType() {
+      if (this.sortType === ResultSortType.ASC) {
+        this.sortType = ResultSortType.DSC;
+      } else {
+        this.sortType = ResultSortType.ASC;
+      }
+    },
+  },
 }
 </script>
 
@@ -63,5 +102,15 @@ th {
   margin-left: 1rem;
   margin-right: 1rem;
   width: 10%;
+}
+
+.ASC::after {
+  content: "\25B2"; /* Unicode for up arrow */
+  color: white;      /* Set the color of the arrow */
+}
+
+.DSC::after {
+  content: "\25BC"; /* Unicode for up arrow */
+  color: white;      /* Set the color of the arrow */
 }
 </style>
